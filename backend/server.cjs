@@ -7,7 +7,11 @@ const SALT_ROUNDS_BCRYPT = 15;
 const app = express()
 const PORT = 3000;
 
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 app.get('/', (req, res) => {
@@ -106,6 +110,39 @@ app.post('/auth/login', async(req, res)  => {
    }
 });
 
+// Palabras clave que identifican imágenes de animales
+const KEYWORDS_ANIMALES = [
+  'dog', 'cat', 'pet', 'animal', 'perro', 'gato', 'mascota',
+  'labrador', 'siamese', 'dachshund', 'wikipedia', 'wikimedia'
+];
+
+function esImagenDeAnimal(url) {
+  const urlLower = url.toLowerCase();
+  return KEYWORDS_ANIMALES.some(keyword => urlLower.includes(keyword));
+}
+
+app.get('/mascotas/:id/imagenes', async (req, res) => {
+  const { id } = req.params;
+
+  const { data, error } = await supabase
+    .from('mascotas')
+    .select('imagen_url')
+    .eq('id', id);
+
+  if (error) {
+    return res.status(503).json({ ok: false, message: 'Error al conectar con la base de datos' });
+  }
+
+  if (!Array.isArray(data) || data.length === 0) {
+    return res.status(404).json({ ok: false, message: 'Mascota no encontrada' });
+  }
+
+  const imagenes = data
+    .map(m => m.imagen_url)
+    .filter(url => url && esImagenDeAnimal(url));
+
+  res.status(200).json({ ok: true, imagenes });
+});
 
 app.listen(PORT, () => {
     console.log(`Servidor ejecutandose en el puerto ${PORT}`)

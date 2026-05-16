@@ -58,7 +58,7 @@ class _EstadoPaginaLogin extends State<PaginaLogin> {
 
       final datos = jsonDecode(respuesta.body);
 
-      if (respuesta.statusCode == 200 && datos['success'] == true) {
+      if (respuesta.statusCode == 200 && datos['ok'] == true) {
         await _guardarToken(datos['token']);
         _navegarAPaginaPrincipal();
       } else {
@@ -221,11 +221,9 @@ class _EstadoPaginaPrincipal extends State<PaginaPrincipal> {
   Map<String, dynamic>? reaccionSeleccionada;
   bool mostrarReacciones = false;
 
-  final List<String> imagenesPublicacion = [
-    'https://picsum.photos/600/400?random=1',
-    'https://picsum.photos/600/400?random=2',
-    'https://picsum.photos/600/400?random=3',
-  ];
+  List<String> imagenesPublicacion = [];
+  bool cargandoImagenes = false;
+  String errorImagenes = '';
 
   static const List<Map<String, dynamic>> catalogoReacciones = [
     {'icon': Icons.thumb_up, 'color': Colors.blue, 'label': 'Me gusta'},
@@ -291,6 +289,43 @@ class _EstadoPaginaPrincipal extends State<PaginaPrincipal> {
     );
   }
 
+  Future<void> _cargarImagenes() async {
+    setState(() {
+      cargandoImagenes = true;
+      errorImagenes = '';
+    });
+
+    try {
+      final respuesta = await http.get(
+        Uri.parse('http://127.0.0.1:3000/mascotas/1/imagenes'),
+      );
+
+      if (respuesta.statusCode == 200) {
+        final datos = jsonDecode(respuesta.body);
+        setState(() {
+          imagenesPublicacion = List<String>.from(datos['imagenes']);
+          cargandoImagenes = false;
+        });
+      } else {
+        setState(() {
+          errorImagenes = 'Error al cargar imágenes';
+          cargandoImagenes = false;
+        });
+      }
+    } catch (_) {
+      setState(() {
+        errorImagenes = 'No se pudo conectar al servidor';
+        cargandoImagenes = false;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarImagenes();
+  }
+
   final ScrollController _controladorGaleria = ScrollController();
 
   @override
@@ -344,7 +379,7 @@ class _EstadoPaginaPrincipal extends State<PaginaPrincipal> {
                               ),
                             );
                           },
-                          errorBuilder: (_, __, ___) => Container(
+                          errorBuilder: (_, _, _) => Container(
                             color: Colors.grey[300],
                             child: const Center(
                               child: Icon(
