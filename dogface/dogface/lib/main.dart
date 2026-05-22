@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'theme/app_theme.dart';
+import 'screens/personalizacion_screen.dart';
 
 // ==================== PUNTO DE ENTRADA ====================
 void main() => runApp(const MiApp());
@@ -16,6 +18,7 @@ class MiApp extends StatelessWidget {
       home: const PaginaLogin(),
       debugShowCheckedModeBanner: false,
       title: 'DogFace',
+      theme: AppTheme.obtenerTema(),
     );
   }
 }
@@ -948,7 +951,15 @@ class _EstadoPaginaConfiguracion extends State<PaginaConfiguracion> {
                       'Notificaciones',
                       'Administrar alertas',
                     ),
-                    _itemConfig(Icons.palette, 'Apariencia', 'Cambiar tema'),
+                    _itemConfig(
+                      Icons.palette,
+                      'Apariencia',
+                      'Cambiar tema',
+                      alTocar: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PersonalizacionScreen()),
+                      ),
+                    ),
                     _itemConfig(Icons.help, 'Ayuda', 'Centro de ayuda'),
                     _itemConfig(
                       Icons.logout,
@@ -1087,6 +1098,7 @@ class _EstadoPaginaConfiguracion extends State<PaginaConfiguracion> {
     String titulo,
     String subtitulo, {
     bool esPeligro = false,
+    VoidCallback? alTocar,
   }) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -1104,7 +1116,7 @@ class _EstadoPaginaConfiguracion extends State<PaginaConfiguracion> {
         ),
         subtitle: Text(subtitulo),
         trailing: const Icon(Icons.chevron_right),
-        onTap: () {},
+        onTap: alTocar,
       ),
     );
   }
